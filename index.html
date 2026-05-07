@@ -10,37 +10,50 @@
     <h2 style="color:#064e3b;">AGRO SCAN - CRISTYAN</h2>
 
     <div style="background:white; padding:20px; border-radius:20px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); max-width: 400px; margin: auto;">
-        <p><b>1. Planta selecionada:</b></p>
-        <select id="cultura" style="width:100%; padding:12px; border-radius:10px;">
+        <p><b>1. Planta:</b></p>
+        <select id="cultura" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ccc;">
             <option value="soja">Soja 🌱</option>
             <option value="maracuja">Maracujá 🟡</option>
             <option value="laranja">Laranja 🍊</option>
             <option value="milho">Milho 🌽</option>
         </select>
 
-        <p><b>2. Foto ou Print da folha:</b></p>
-        <input type="file" id="foto" accept="image/*" onchange="ver(this)">
+        <p><b>2. Foto ou Print:</b></p>
+        <input type="file" id="foto" accept="image/*" onchange="processarFoto(this)">
         
+        <canvas id="canvas" style="display:none;"></canvas>
         <img id="pre" style="width:100%; display:none; border-radius:15px; margin-top:15px; border: 1px solid #ddd;">
 
         <button id="btn" onclick="enviar()" style="display:none; width:100%; padding:18px; background:#10b981; color:white; border:none; border-radius:15px; font-weight:bold; margin-top:20px;">ANALISAR AGORA</button>
     </div>
 
-    <div id="status" style="display:none; margin-top:20px; color:#064e3b; font-weight:bold;">IA ANALISANDO...</div>
+    <div id="status" style="display:none; margin-top:20px; color:#064e3b; font-weight:bold;">IA PROCESSANDO...</div>
     <div id="res" style="margin-top:25px; background:#fff; padding:20px; border-radius:20px; display:none; text-align:left; max-width: 400px; margin: 25px auto; border-left: 8px solid #10b981;"></div>
 
     <script>
         const KEY = "AIzaSyCpiU5tzmwUKX_avjRbrO-dDtSNSGnSS40";
-        let fotoData = "";
+        let fotoPronta = "";
 
-        function ver(input) {
+        function processarFoto(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    fotoData = e.target.result.split(',')[1];
-                    document.getElementById('pre').src = e.target.result;
-                    document.getElementById('pre').style.display = "block";
-                    document.getElementById('btn').style.display = "block";
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.getElementById('canvas');
+                        const ctx = canvas.getContext('2d');
+                        // Reduz a imagem para no máximo 800px para a IA não travar
+                        const scale = Math.min(800 / img.width, 800 / img.height);
+                        canvas.width = img.width * scale;
+                        canvas.height = img.height * scale;
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        
+                        fotoPronta = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
+                        document.getElementById('pre').src = canvas.toDataURL('image/jpeg');
+                        document.getElementById('pre').style.display = "block";
+                        document.getElementById('btn').style.display = "block";
+                    };
+                    img.src = e.target.result;
                 };
                 reader.readAsDataURL(input.files[0]);
             }
@@ -49,15 +62,13 @@
         async function enviar() {
             document.getElementById('status').style.display = "block";
             document.getElementById('btn').style.display = "none";
-            
             const planta = document.getElementById('cultura').value;
 
-            // Prompt super detalhado para evitar que a IA recuse
-            const corpo = {
+            const payload = {
                 contents: [{
                     parts: [
-                        { text: "Aja como um especialista em fitopatologia. Analise esta imagem de uma folha de " + planta + ". Descreva as lesões, identifique a doença e recomende o tratamento químico e orgânico. Se a imagem estiver difícil, use seu conhecimento sobre as doenças mais comuns desta cultura no Brasil para dar um diagnóstico provável." },
-                        { inlineData: { mimeType: "image/jpeg", data: fotoData } }
+                        { text: "Identifique a doença nesta folha de " + planta + ". Se houver manchas, diga o nome da doença e o tratamento. Responda de forma simples em português." },
+                        { inlineData: { mimeType: "image/jpeg", data: fotoPronta } }
                     ]
                 }],
                 safetySettings: [
@@ -72,15 +83,14 @@
                 const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + KEY, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(corpo)
+                    body: JSON.stringify(payload)
                 });
-
                 const d = await r.json();
                 const texto = d.candidates[0].content.parts[0].text;
                 document.getElementById('res').innerHTML = "<b>Diagnóstico:</b><br>" + texto.replace(/\n/g, "<br>");
                 document.getElementById('res').style.display = "block";
             } catch (e) {
-                alert("A IA ainda não conseguiu processar. Tente uma foto de mais longe.");
+                alert("Erro ao analisar. Tente uma foto de outra folha.");
             } finally {
                 document.getElementById('status').style.display = "none";
                 document.getElementById('btn').style.display = "block";
