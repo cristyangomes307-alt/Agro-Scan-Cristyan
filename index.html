@@ -7,32 +7,38 @@
 </head>
 <body style="font-family:sans-serif; padding:20px; background:#f0f4f8; text-align:center;">
 
-    <h2 style="color:#064e3b;">AGRO SCAN - CRISTYAN</h2>
+    <h2 style="color:#064e3b; margin-bottom:5px;">AGRO SCAN</h2>
+    <p style="font-size:12px; color:#666; margin-top:0;">Criado por Cristyan</p>
 
     <div style="background:white; padding:20px; border-radius:20px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); max-width: 400px; margin: auto;">
-        <p><b>1. Planta:</b></p>
-        <select id="cultura" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ccc;">
+        <p><b>1. Escolha a Planta:</b></p>
+        <select id="cultura" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ccc; font-size:16px;">
             <option value="soja">Soja 🌱</option>
             <option value="maracuja">Maracujá 🟡</option>
             <option value="laranja">Laranja 🍊</option>
             <option value="milho">Milho 🌽</option>
+            <option value="feijao">Feijão 🌿</option>
         </select>
 
-        <p><b>2. Foto ou Print:</b></p>
-        <input type="file" id="foto" accept="image/*" onchange="processarFoto(this)">
+        <p><b>2. Tire uma Foto ou use Print:</b></p>
+        <input type="file" id="foto" accept="image/*" onchange="processarFoto(this)" style="font-size:14px;">
         
         <canvas id="canvas" style="display:none;"></canvas>
         <img id="pre" style="width:100%; display:none; border-radius:15px; margin-top:15px; border: 1px solid #ddd;">
 
-        <button id="btn" onclick="enviar()" style="display:none; width:100%; padding:18px; background:#10b981; color:white; border:none; border-radius:15px; font-weight:bold; margin-top:20px;">ANALISAR AGORA</button>
+        <button id="btn" onclick="enviar()" style="display:none; width:100%; padding:18px; background:#10b981; color:white; border:none; border-radius:15px; font-weight:bold; margin-top:20px; font-size:18px;">ANALISAR AGORA</button>
     </div>
 
-    <div id="status" style="display:none; margin-top:20px; color:#064e3b; font-weight:bold;">IA PROCESSANDO...</div>
-    <div id="res" style="margin-top:25px; background:#fff; padding:20px; border-radius:20px; display:none; text-align:left; max-width: 400px; margin: 25px auto; border-left: 8px solid #10b981;"></div>
+    <div id="status" style="display:none; margin-top:20px; color:#064e3b; font-weight:bold;">
+        ⌛ IA ESTÁ ANALISANDO...
+    </div>
+
+    <div id="res" style="margin-top:25px; background:#fff; padding:20px; border-radius:20px; display:none; text-align:left; max-width: 400px; margin: 25px auto; border-left: 8px solid #10b981; box-shadow: 0 5px 10px rgba(0,0,0,0.05);"></div>
 
     <script>
-        const KEY = "AIzaSyCpiU5tzmwUKX_avjRbrO-dDtSNSGnSS40";
-        let fotoPronta = "";
+        // CHAVE ATUALIZADA
+        const K = "AIzaSyCpiU5tzmwUKX_avjRbrO-dDtSNSGnSS40"; 
+        let fotoFinal = "";
 
         function processarFoto(input) {
             if (input.files && input.files[0]) {
@@ -42,13 +48,15 @@
                     img.onload = function() {
                         const canvas = document.getElementById('canvas');
                         const ctx = canvas.getContext('2d');
-                        // Reduz a imagem para no máximo 800px para a IA não travar
-                        const scale = Math.min(800 / img.width, 800 / img.height);
-                        canvas.width = img.width * scale;
-                        canvas.height = img.height * scale;
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        
-                        fotoPronta = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
+                        // Redimensiona para ficar leve (600px)
+                        const max = 600;
+                        let w = img.width;
+                        let h = img.height;
+                        if (w > h) { if (w > max) { h *= max / w; w = max; } }
+                        else { if (h > max) { w *= max / h; h = max; } }
+                        canvas.width = w; canvas.height = h;
+                        ctx.drawImage(img, 0, 0, w, h);
+                        fotoFinal = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
                         document.getElementById('pre').src = canvas.toDataURL('image/jpeg');
                         document.getElementById('pre').style.display = "block";
                         document.getElementById('btn').style.display = "block";
@@ -60,40 +68,38 @@
         }
 
         async function enviar() {
-            document.getElementById('status').style.display = "block";
-            document.getElementById('btn').style.display = "none";
-            const planta = document.getElementById('cultura').value;
+            const btn = document.getElementById('btn');
+            const status = document.getElementById('status');
+            const res = document.getElementById('res');
+            
+            status.style.display = "block";
+            res.style.display = "none";
+            btn.style.display = "none";
 
-            const payload = {
-                contents: [{
-                    parts: [
-                        { text: "Identifique a doença nesta folha de " + planta + ". Se houver manchas, diga o nome da doença e o tratamento. Responda de forma simples em português." },
-                        { inlineData: { mimeType: "image/jpeg", data: fotoPronta } }
-                    ]
-                }],
-                safetySettings: [
-                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-                ]
-            };
+            const p = document.getElementById('cultura').value;
 
             try {
-                const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + KEY, {
+                const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${K}`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({
+                        contents: [{ parts: [
+                            { text: `Você é um agrônomo. Analise a folha de ${p} nesta foto. Diga o nome da doença e como tratar. Seja direto e fale em português.` },
+                            { inlineData: { mimeType: "image/jpeg", data: fotoFinal } }
+                        ]}]
+                    })
                 });
+
                 const d = await r.json();
-                const texto = d.candidates[0].content.parts[0].text;
-                document.getElementById('res').innerHTML = "<b>Diagnóstico:</b><br>" + texto.replace(/\n/g, "<br>");
-                document.getElementById('res').style.display = "block";
+                const t = d.candidates[0].content.parts[0].text;
+                res.innerHTML = "<h3 style='color:#064e3b; margin-top:0;'>Diagnóstico:</h3>" + t.replace(/\n/g, "<br>");
+                res.style.display = "block";
+                res.scrollIntoView({ behavior: 'smooth' });
             } catch (e) {
-                alert("Erro ao analisar. Tente uma foto de outra folha.");
+                alert("A IA demorou a responder. Tente de novo em 10 segundos.");
             } finally {
-                document.getElementById('status').style.display = "none";
-                document.getElementById('btn').style.display = "block";
+                status.style.display = "none";
+                btn.style.display = "block";
             }
         }
     </script>
