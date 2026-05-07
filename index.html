@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agro Scan</title>
+</head>
+<body style="font-family:sans-serif; padding:20px; background:#eee;">
+
+    <h2 style="color:#064e3b;">AGRO SCAN - CRISTYAN</h2>
+
+    <div style="background:white; padding:15px; border-radius:10px;">
+        <p>1. Escolha a planta:</p>
+        <select id="cultura" style="width:100%; padding:10px;">
+            <option value="maracuja">Maracujá</option>
+            <option value="laranja">Laranja</option>
+            <option value="soja">Soja</option>
+            <option value="milho">Milho</option>
+        </select>
+
+        <p>2. Adicione a foto:</p>
+        <input type="file" id="foto" accept="image/*" onchange="ver(this)" style="width:100%;">
+        <br><br>
+        <img id="pre" style="width:100%; display:none; border-radius:10px;">
+
+        <button id="btn" onclick="enviar()" style="display:none; width:100%; padding:20px; background:green; color:white; border:none; border-radius:10px; font-weight:bold; margin-top:10px;">ANALISAR AGORA</button>
+    </div>
+
+    <div id="status" style="display:none; color:blue; font-weight:bold; margin-top:20px;">EXAMINANDO...</div>
+    <div id="res" style="margin-top:20px; background:white; padding:15px; border-radius:10px; display:none;"></div>
+
+    <script>
+        const KEY = "AIzaSyCpiU5tzmwUKX_avjRbrO-dDtSNSGnSS40";
+        let base64 = "";
+
+        function ver(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    base64 = e.target.result.split(',')[1];
+                    document.getElementById('pre').src = e.target.result;
+                    document.getElementById('pre').style.display = "block";
+                    document.getElementById('btn').style.display = "block";
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        async function enviar() {
+            document.getElementById('status').style.display = "block";
+            document.getElementById('btn').style.display = "none";
+            const c = document.getElementById('cultura').value;
+
+            try {
+                const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + KEY, {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: "Analise a doenca na folha de " + c }, { inlineData: { mimeType: "image/jpeg", data: base64 } }] }]
+                    })
+                });
+                const j = await r.json();
+                const texto = j.candidates[0].content.parts[0].text;
+                document.getElementById('res').innerHTML = "<h3>Resultado:</h3>" + texto;
+                document.getElementById('res').style.display = "block";
+            } catch (e) {
+                alert("Erro na conexão ou na foto.");
+            } finally {
+                document.getElementById('status').style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>
