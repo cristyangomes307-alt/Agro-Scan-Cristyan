@@ -1,118 +1,438 @@
+```html
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agro Scan Final</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Agro Scan Pro - Cristyan Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = JSON.parse(window.__firebase_config || '{}');
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = window.__app_id || 'agro-scan-pro';
+
+        window.db = db;
+        window.auth = auth;
+        window.appId = appId;
+        window.collection = collection;
+        window.addDoc = addDoc;
+        window.onSnapshot = onSnapshot;
+        window.serverTimestamp = serverTimestamp;
+
+        const initAuth = async () => {
+            try {
+                if (typeof window.__initial_auth_token !== 'undefined' && window.__initial_auth_token) {
+                    await signInWithCustomToken(auth, window.__initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (e) { console.error(e); }
+        };
+        initAuth();
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+
+        :root { 
+            --primary: #064e3b; 
+            --accent: #10b981;
+            --bg: #f8fafc; 
+        }
+
+        body { 
+            background-color: var(--bg); 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+            overflow-x: hidden;
+        }
+        
+        .main-header { 
+            background: linear-gradient(135deg, #022c22 0%, #064e3b 100%); 
+            position: relative;
+            padding: 3.5rem 1.5rem 5rem 1.5rem;
+            border-bottom-left-radius: 2.5rem;
+            border-bottom-right-radius: 2.5rem;
+            z-index: 50;
+        }
+
+        .watermark {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.5rem;
+            font-size: 9px;
+            color: rgba(16, 185, 129, 0.5);
+            letter-spacing: 0.2em;
+            font-weight: 800;
+            text-transform: uppercase;
+            z-index: 60;
+        }
+
+        .menu-card {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.04);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .menu-card:active {
+            transform: scale(0.92);
+            background: #ecfdf5;
+            border-color: #10b981;
+        }
+
+        .loader { 
+            border: 3px solid #e2e8f0; 
+            border-top: 3px solid #10b981; 
+            border-radius: 50%; 
+            width: 50px; 
+            height: 50px; 
+            animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; 
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Estilos do Laudo */
+        .laudo-content h1 { font-size: 1.8rem; font-weight: 800; color: #064e3b; margin-top: 0.5rem; margin-bottom: 1rem; line-height: 1.1; letter-spacing: -0.02em; }
+        .laudo-content h2 { font-size: 1.1rem; font-weight: 700; color: #10b981; margin-top: 1.5rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; }
+        .laudo-content p { color: #475569; line-height: 1.6; font-size: 0.95rem; margin-bottom: 0.8rem; }
+        .laudo-content b { color: #0f172a; font-weight: 700; }
+        
+        .severity-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.35rem 0.85rem;
+            border-radius: 9999px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            background: #dcfce7;
+            color: #166534;
+            margin-bottom: 0.5rem;
+            border: 1px solid #bbf7d0;
+        }
+    </style>
 </head>
-<body class="bg-slate-50 pb-10 font-sans">
+<body class="pb-10">
 
-    <header class="bg-green-900 text-white p-8 shadow-lg text-center rounded-b-[2rem]">
-        <h1 class="text-3xl font-black italic">AGRO SCAN</h1>
-        <p class="text-green-300 text-xs">Sistema de Diagnóstico IA</p>
-    </header>
-
-    <main class="max-w-md mx-auto p-4 -mt-6">
-        <div id="painel-principal" class="bg-white rounded-3xl shadow-xl p-6">
-            
-            <div id="bloco-selecao">
-                <p class="text-center font-bold text-gray-500 mb-4 uppercase text-xs">Escolha a Cultura</p>
-                <div class="grid grid-cols-2 gap-3">
-                    <button onclick="definirCultura('Soja')" class="p-4 border-2 border-green-50 rounded-2xl bg-green-50/30 hover:bg-green-100 flex flex-col items-center">
-                        <i class="fas fa-seedling text-green-700 text-xl"></i>
-                        <span class="font-bold text-sm mt-2">Soja</span>
-                    </button>
-                    <button onclick="definirCultura('Feijão')" class="p-4 border-2 border-green-50 rounded-2xl bg-green-50/30 hover:bg-green-100 flex flex-col items-center">
-                        <i class="fas fa-leaf text-green-700 text-xl"></i>
-                        <span class="font-bold text-sm mt-2">Feijão</span>
-                    </button>
-                </div>
+    <header class="main-header text-white shadow-2xl">
+        <div class="watermark">Criado por Cristyan</div>
+        <div class="max-w-4xl mx-auto flex items-center gap-5">
+            <div class="w-14 h-14 bg-emerald-500/20 rounded-2xl flex items-center justify-center backdrop-blur-md border border-emerald-400/30">
+                <i class="fas fa-microscope text-2xl text-emerald-300"></i>
             </div>
-
-            <div id="bloco-upload" class="hidden">
-                <div class="border-4 border-dashed border-gray-100 rounded-3xl p-4 text-center cursor-pointer" onclick="document.getElementById('input-foto').click()">
-                    <img id="img-preview" class="hidden w-full rounded-2xl mb-4">
-                    <div id="info-upload">
-                        <i class="fas fa-camera text-4xl text-gray-200 mb-2"></i>
-                        <p class="text-gray-400 font-bold">Tirar ou Abrir Foto</p>
-                    </div>
-                </div>
-                <input type="file" id="input-foto" class="hidden" accept="image/*">
-                <button id="btn-gerar" onclick="executarAnalise()" class="hidden w-full bg-green-600 text-white py-4 rounded-2xl font-black mt-4 shadow-lg">ANALISAR AGORA</button>
-            </div>
-
-            <div id="bloco-loading" class="hidden text-center py-10">
-                <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-green-700 mx-auto mb-4"></div>
-                <p class="font-black text-green-800 animate-pulse">ESTUDANDO PLANTA...</p>
-            </div>
-
-            <div id="bloco-resultado" class="hidden">
-                <div id="texto-resultado" class="prose prose-green"></div>
-                <button onclick="location.reload()" class="w-full bg-gray-800 text-white py-4 rounded-2xl font-bold mt-6">NOVO TESTE</button>
+            <div>
+                <h1 class="text-2xl font-extrabold tracking-tighter">Agro Scan <span class="text-emerald-400 text-base">PRO</span></h1>
+                <p class="text-emerald-200/60 text-[9px] font-bold uppercase tracking-[0.2em]">Inteligência Fitopatológica</p>
             </div>
         </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto p-5 -mt-12 relative z-10">
+        
+        <!-- Dashboard Menu -->
+        <div id="step-1" class="space-y-8">
+            <div class="flex items-center justify-between px-2">
+                <h2 class="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest">Painel de Culturas</h2>
+                <button onclick="toggleHistory()" class="flex items-center gap-2 text-emerald-700 font-bold text-xs bg-emerald-50 px-4 py-2 rounded-xl">
+                    <i class="fas fa-folder-open"></i> Arquivo
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="selectCulture('Soja')" class="menu-card group">
+                    <div class="w-14 h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center mb-3 text-2xl transition-colors group-active:bg-green-600 group-active:text-white">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                    <span class="font-extrabold text-slate-700 text-sm">Soja</span>
+                </button>
+                
+                <button onclick="selectCulture('Feijão')" class="menu-card group">
+                    <div class="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mb-3 text-2xl transition-colors group-active:bg-amber-600 group-active:text-white">
+                        <i class="fas fa-leaf"></i>
+                    </div>
+                    <span class="font-extrabold text-slate-700 text-sm">Feijão</span>
+                </button>
+                
+                <button onclick="selectCulture('Maracujá')" class="menu-card group">
+                    <div class="w-14 h-14 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center mb-3 text-2xl transition-colors group-active:bg-purple-600 group-active:text-white">
+                        <i class="fas fa-lemon"></i>
+                    </div>
+                    <span class="font-extrabold text-slate-700 text-sm">Maracujá</span>
+                </button>
+                
+                <button onclick="selectCulture('Laranja')" class="menu-card group">
+                    <div class="w-14 h-14 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center mb-3 text-2xl transition-colors group-active:bg-orange-600 group-active:text-white">
+                        <i class="fas fa-circle"></i>
+                    </div>
+                    <span class="font-extrabold text-slate-700 text-sm">Laranja</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Etapa 2: Scanner -->
+        <div id="step-2" class="hidden mt-14 space-y-6">
+            <div class="flex items-center justify-between bg-white/80 backdrop-blur-md p-3 rounded-2xl border border-white shadow-sm">
+                <div class="flex items-center gap-3">
+                    <div id="culture-icon-mini" class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center shadow-md text-white"></div>
+                    <h3 id="display-culture" class="font-extrabold text-slate-800 text-lg uppercase tracking-tighter"></h3>
+                </div>
+                <button onclick="resetApp()" class="w-10 h-10 bg-white shadow-sm border border-slate-100 rounded-full flex items-center justify-center text-slate-400 active:scale-90 transition-transform">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="bg-white rounded-3xl p-2 border-2 border-dashed border-emerald-100 relative overflow-hidden shadow-inner" onclick="document.getElementById('file-input').click()">
+                <div id="placeholder" class="py-24 text-center">
+                    <div class="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-100 shadow-sm">
+                        <i class="fas fa-camera text-4xl text-emerald-400"></i>
+                    </div>
+                    <p class="font-extrabold text-slate-500 text-sm">Capturar Amostra</p>
+                    <p class="text-slate-300 text-[10px] uppercase font-bold mt-1 tracking-widest">Toque para Fotografar</p>
+                </div>
+                <img id="preview" class="hidden w-full h-auto max-h-[500px] object-contain rounded-2xl">
+            </div>
+            
+            <input type="file" id="file-input" class="hidden" accept="image/*" capture="environment">
+            
+            <button id="btn-analyze" onclick="startAnalysis()" class="hidden w-full bg-emerald-600 text-white py-6 rounded-3xl font-black text-xl shadow-2xl shadow-emerald-200 active:scale-95 transition-all">
+                GERAR DIAGNÓSTICO
+            </button>
+        </div>
+
+        <!-- Histórico -->
+        <div id="history-section" class="hidden space-y-4 pt-14">
+            <h3 class="font-black text-slate-800 px-2 uppercase text-xs tracking-widest">Arquivo de Campo</h3>
+            <div id="history-list" class="space-y-3"></div>
+            <button onclick="toggleHistory()" class="w-full py-4 text-slate-400 font-bold text-xs uppercase tracking-widest">Voltar ao Painel</button>
+        </div>
+
+        <!-- Loader -->
+        <div id="loader-area" class="hidden py-32 text-center">
+            <div class="loader mx-auto mb-8"></div>
+            <h2 class="text-emerald-950 font-black text-xl italic tracking-tighter">PROCESSANDO AMOSTRA...</h2>
+            <p class="text-slate-400 text-xs mt-2 uppercase font-bold tracking-[0.2em]">Identificando Agente Causador</p>
+        </div>
+
+        <!-- Resultado -->
+        <div id="result-area" class="hidden space-y-6 pt-14">
+            <div class="bg-white rounded-[2.5rem] p-8 laudo-content shadow-2xl relative overflow-hidden" id="output-text"></div>
+            <div class="flex gap-3">
+                <button onclick="resetApp()" class="flex-1 bg-slate-900 text-white py-5 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg active:scale-95">Nova Análise</button>
+                <button onclick="window.print()" class="w-16 bg-white border border-slate-200 rounded-2xl text-slate-600 flex items-center justify-center shadow-md">
+                    <i class="fas fa-print"></i>
+                </button>
+            </div>
+        </div>
+
     </main>
 
     <script>
-        const MINHA_CHAVE = "AIzaSyB3z48pV_WD2aFzq3fU5ND6sZw5UsRsfNw";
-        let culturaAtiva = "";
-        let fotoBase64 = "";
+        const apiKey = ""; 
+        let currentCulture = "";
+        let base64Image = "";
 
-        function definirCultura(c) {
-            culturaAtiva = c;
-            document.getElementById('bloco-selecao').classList.add('hidden');
-            document.getElementById('bloco-upload').classList.remove('hidden');
-        }
-
-        document.getElementById('input-foto').onchange = function(e) {
-            const f = e.target.files[0];
-            const r = new FileReader();
-            r.onload = (ev) => {
-                fotoBase64 = ev.target.result.split(',')[1];
-                document.getElementById('img-preview').src = ev.target.result;
-                document.getElementById('img-preview').classList.remove('hidden');
-                document.getElementById('info-upload').classList.add('hidden');
-                document.getElementById('btn-gerar').classList.remove('hidden');
-            };
-            r.readAsDataURL(f);
+        const icons = {
+            'Soja': '<i class="fas fa-seedling"></i>',
+            'Feijão': '<i class="fas fa-leaf"></i>',
+            'Maracujá': '<i class="fas fa-lemon"></i>',
+            'Laranja': '<i class="fas fa-circle"></i>'
         };
 
-        async function executarAnalise() {
-            document.getElementById('bloco-upload').classList.add('hidden');
-            document.getElementById('bloco-loading').classList.remove('hidden');
+        function selectCulture(c) {
+            currentCulture = c;
+            document.getElementById('display-culture').innerText = c;
+            document.getElementById('culture-icon-mini').innerHTML = icons[c];
+            document.getElementById('step-1').classList.add('hidden');
+            document.getElementById('step-2').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
-            // AQUI ESTÁ O SEGREDO: v1beta COM TIMESTAMP PARA EVITAR CACHE DA API
-            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${MINHA_CHAVE}`;
+        function toggleHistory() {
+            const h = document.getElementById('history-section');
+            const s1 = document.getElementById('step-1');
+            if (h.classList.contains('hidden')) {
+                h.classList.remove('hidden');
+                s1.classList.add('hidden');
+                loadHistory();
+            } else {
+                h.classList.add('hidden');
+                s1.classList.remove('hidden');
+            }
+        }
+
+        function resetApp() {
+            base64Image = "";
+            document.querySelectorAll('main > div, #loader-area, #result-area').forEach(d => d.classList.add('hidden'));
+            document.getElementById('step-1').classList.remove('hidden');
+            document.getElementById('preview').src = "";
+            document.getElementById('preview').classList.add('hidden');
+            document.getElementById('placeholder').classList.remove('hidden');
+            document.getElementById('btn-analyze').classList.add('hidden');
+            document.getElementById('file-input').value = "";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        document.getElementById('file-input').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const max_size = 1024;
+                    let width = img.width;
+                    let height = img.height;
+                    if (width > height) {
+                        if (width > max_size) { height *= max_size / width; width = max_size; }
+                    } else {
+                        if (height > max_size) { width *= max_size / height; height = max_size; }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    base64Image = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+                    document.getElementById('preview').src = canvas.toDataURL('image/jpeg');
+                    document.getElementById('preview').classList.remove('hidden');
+                    document.getElementById('placeholder').classList.add('hidden');
+                    document.getElementById('btn-analyze').classList.remove('hidden');
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        async function startAnalysis() {
+            const loader = document.getElementById('loader-area');
+            const step2 = document.getElementById('step-2');
+            loader.classList.remove('hidden');
+            step2.classList.add('hidden');
+
+            const systemPrompt = `Aja como o 'Agro Scan Pro'. Sua prioridade absoluta é o diagnóstico.
+            
+            REGRAS DE RESPOSTA:
+            1. O NOME DA DOENÇA deve ser o TÍTULO PRINCIPAL (#).
+            2. Forneça uma explicação curta da etiologia.
+            3. Explique a causa raiz (ambiente, clima, manejo).
+
+            FORMATO DO LAUDO (MARKDOWN):
+            # [NOME DA DOENÇA]
+            
+            ## 🧬 Etiologia e Causa Raiz
+            - **Agente:** [Nome científico]
+            - **Causa Ambiental:** [O que no clima/manejo causou isso?]
+            
+            ## 🔍 Evidências Visuais
+            - [Descrição detalhada da lesão]
+            
+            ## 🛠️ Protocolo de Manejo
+            - **Tratamento:** [Ação imediata]
+            - **Prevenção:** [Manejo futuro]
+            
+            ## 📊 Confiança: [X%]`;
 
             try {
-                const res = await fetch(endpoint, {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                const resp = await fetch(url, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{
+                        contents: [{ 
+                            role: "user",
                             parts: [
-                                {text: `Analise esta planta de ${culturaAtiva} e diga a doença e tratamento.`},
-                                {inlineData: {mimeType: "image/jpeg", data: fotoBase64}}
-                            ]
-                        }]
+                                { text: `Inicie análise de ${currentCulture}. Coloque o nome da doença em primeiro lugar.` }, 
+                                { inlineData: { mimeType: "image/jpeg", data: base64Image } }
+                            ] 
+                        }],
+                        systemInstruction: { parts: [{ text: systemPrompt }] },
+                        generationConfig: { temperature: 0.1 }
                     })
                 });
-
-                const json = await res.json();
-                if (json.error) throw new Error(json.error.message);
-
-                const final = json.candidates[0].content.parts[0].text;
-                document.getElementById('texto-resultado').innerHTML = final.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
                 
-                document.getElementById('bloco-loading').classList.add('hidden');
-                document.getElementById('bloco-resultado').classList.remove('hidden');
-            } catch (e) {
-                alert("Erro: " + e.message);
-                location.reload();
+                const data = await resp.json();
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (text) {
+                    showResult(text);
+                    saveToCloud(currentCulture, text);
+                } else { throw new Error(); }
+            } catch (err) {
+                alert("Erro no servidor.");
+                resetApp();
+            } finally {
+                loader.classList.add('hidden');
             }
+        }
+
+        function showResult(text) {
+            const output = document.getElementById('output-text');
+            const html = text
+                .replace(/^# (.*$)/gim, '<div class="severity-pill">Diagnóstico Concluído</div><h1>$1</h1>')
+                .replace(/^## (.*$)/gim, '<h2><i class="fas fa-check-circle text-[10px]"></i> $1</h2>')
+                .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+                .replace(/\n/g, '<br>');
+            output.innerHTML = html;
+            document.getElementById('result-area').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function saveToCloud(cult, diag) {
+            if (!window.auth.currentUser || !window.db) return;
+            try {
+                await window.addDoc(window.collection(window.db, 'artifacts', window.appId, 'users', window.auth.currentUser.uid, 'diagnoses'), {
+                    culture: cult,
+                    diagnosis: diag,
+                    createdAt: window.serverTimestamp()
+                });
+            } catch (e) {}
+        }
+
+        function loadHistory() {
+            if (!window.auth.currentUser || !window.db) return;
+            const list = document.getElementById('history-list');
+            list.innerHTML = '<div class="py-12 text-center text-emerald-600"><i class="fas fa-spinner fa-spin"></i></div>';
+            const ref = window.collection(window.db, 'artifacts', window.appId, 'users', window.auth.currentUser.uid, 'diagnoses');
+            window.onSnapshot(ref, (snap) => {
+                list.innerHTML = "";
+                if (snap.empty) {
+                    list.innerHTML = '<div class="bg-white p-12 rounded-3xl text-center text-slate-400 text-xs italic">Nenhum registro.</div>';
+                    return;
+                }
+                snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+                .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))
+                .forEach(d => {
+                    const item = document.createElement('div');
+                    item.className = "bg-white p-5 rounded-3xl flex justify-between items-center shadow-sm active:bg-emerald-50";
+                    const title = d.diagnosis.split('\n')[0].replace('# ', '').replace('<div class="severity-pill">Diagnóstico Concluído</div>', '');
+                    item.innerHTML = `
+                        <div class="truncate pr-4 text-left">
+                            <span class="text-[9px] font-black text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full uppercase mb-2 inline-block">${d.culture}</span>
+                            <h4 class="font-bold text-slate-800 truncate text-sm">${title}</h4>
+                        </div>
+                        <i class="fas fa-chevron-right text-xs text-slate-200"></i>
+                    `;
+                    item.onclick = () => { showResult(d.diagnosis); document.getElementById('history-section').classList.add('hidden'); };
+                    list.appendChild(item);
+                });
+            });
         }
     </script>
 </body>
 </html>
+
+```
