@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -7,88 +6,22 @@
     <title>Agro Scan - Inteligência Fitossanitária</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Firebase SDKs -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        const firebaseConfig = JSON.parse(window.__firebase_config || '{}');
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = window.__app_id || 'agro-scan-default';
-
-        window.db = db;
-        window.auth = auth;
-        window.appId = appId;
-        window.collection = collection;
-        window.addDoc = addDoc;
-        window.onSnapshot = onSnapshot;
-        window.serverTimestamp = serverTimestamp;
-
-        const initAuth = async () => {
-            if (typeof window.__initial_auth_token !== 'undefined' && window.__initial_auth_token) {
-                await signInWithCustomToken(auth, window.__initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
-            }
-        };
-        initAuth().catch(console.error);
-    </script>
-
+    
     <style>
-        :root {
-            --primary: #1b4332;
-            --secondary: #2d6a4f;
-            --accent: #d8f3dc;
-            --bg: #f4f7f5;
-        }
-        body {
-            background-color: var(--bg);
-            font-family: 'Inter', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .gradient-header {
-            background: linear-gradient(135deg, #081c15 0%, #1b4332 100%);
-        }
-        .card {
-            background: white;
-            border-radius: 1.5rem;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-        }
-        .watermark {
-            position: absolute;
-            top: 1rem;
-            right: 1.5rem;
-            font-size: 0.65rem;
-            color: rgba(255, 255, 255, 0.4);
-            letter-spacing: 0.1em;
-            font-weight: bold;
-            pointer-events: none;
-        }
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #2d6a4f;
-            border-radius: 50%;
-            width: 45px;
-            height: 45px;
-            animation: spin 1s linear infinite;
-        }
+        :root { --primary: #1b4332; --secondary: #2d6a4f; --accent: #d8f3dc; --bg: #f4f7f5; }
+        body { background-color: var(--bg); font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .gradient-header { background: linear-gradient(135deg, #081c15 0%, #1b4332 100%); }
+        .card { background: white; border-radius: 1.5rem; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #2d6a4f; border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        /* Estilização do Laudo */
         .laudo-content h1 { color: #1b4332; font-weight: 900; font-size: 1.5rem; margin-bottom: 1rem; border-bottom: 2px solid #d8f3dc; padding-bottom: 0.5rem; }
         .laudo-content h2 { color: #2d6a4f; font-weight: 700; font-size: 1.1rem; margin-top: 1.5rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px; }
         .laudo-content p { color: #374151; line-height: 1.6; margin-bottom: 0.75rem; }
-        .laudo-content b { color: #064e3b; }
     </style>
 </head>
 <body class="pb-10">
 
-    <!-- Header -->
     <header class="gradient-header text-white p-10 relative shadow-xl">
-        <div class="watermark uppercase">Criado por Cristyan</div>
         <div class="max-w-4xl mx-auto">
             <div class="flex items-center gap-3">
                 <i class="fas fa-leaf text-3xl text-green-300"></i>
@@ -100,120 +33,70 @@
 
     <main class="max-w-4xl mx-auto p-4 -mt-8">
         
-        <!-- Dicas de Foto -->
-        <section class="card p-5 mb-6 border-b-4 border-green-600">
-            <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                <i class="fas fa-camera text-green-600"></i>
-                Instruções para Captura:
-            </h3>
-            <div class="grid grid-cols-2 gap-3 text-xs text-gray-600">
-                <div class="flex items-center gap-2 bg-green-50 p-2 rounded-lg">
-                    <i class="fas fa-sun text-orange-500"></i> <span>Luz Natural</span>
-                </div>
-                <div class="flex items-center gap-2 bg-green-50 p-2 rounded-lg">
-                    <i class="fas fa-expand text-red-500"></i> <span>Foco na Doença</span>
-                </div>
-                <div class="flex items-center gap-2 bg-green-50 p-2 rounded-lg">
-                    <i class="fas fa-compress-arrows-alt text-blue-500"></i> <span>Distância Média</span>
-                </div>
-                <div class="flex items-center gap-2 bg-green-50 p-2 rounded-lg">
-                    <i class="fas fa-image text-purple-500"></i> <span>Imagem Nítida</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- Seleção de Cultura -->
         <div id="step-1" class="space-y-4">
-            <div class="flex justify-between items-center px-1">
-                <h2 class="font-black text-gray-700 uppercase tracking-wide">Escolha a Cultura</h2>
-                <button onclick="toggleHistory()" class="text-xs font-bold text-green-700 bg-white px-4 py-2 rounded-full shadow-sm border border-green-100 active:scale-95 transition-transform">
-                    <i class="fas fa-history mr-1"></i> HISTÓRICO
-                </button>
-            </div>
+            <h2 class="font-black text-gray-700 uppercase tracking-wide px-1">Escolha a Cultura</h2>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <button onclick="selectCulture('Soja')" class="card p-6 flex flex-col items-center hover:bg-green-50 transition-all border-2 border-transparent active:border-green-600">
-                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-3">
-                        <i class="fas fa-seedling text-green-700 text-2xl"></i>
+                <button onclick="selectCulture('Soja')" class="card p-6 flex flex-col items-center active:scale-95 transition-all">
+                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-2">
+                        <i class="fas fa-seedling text-green-700"></i>
                     </div>
                     <span class="font-bold text-sm">Soja</span>
                 </button>
-                <button onclick="selectCulture('Feijão')" class="card p-6 flex flex-col items-center hover:bg-green-50 transition-all border-2 border-transparent active:border-green-600">
-                    <div class="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mb-3">
-                        <i class="fas fa-leaf text-amber-700 text-2xl"></i>
+                <button onclick="selectCulture('Feijão')" class="card p-6 flex flex-col items-center active:scale-95 transition-all">
+                    <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mb-2">
+                        <i class="fas fa-leaf text-amber-700"></i>
                     </div>
                     <span class="font-bold text-sm">Feijão</span>
                 </button>
-                <button onclick="selectCulture('Maracujá')" class="card p-6 flex flex-col items-center hover:bg-green-50 transition-all border-2 border-transparent active:border-green-600">
-                    <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-3">
-                        <i class="fas fa-lemon text-purple-600 text-2xl"></i>
+                <button onclick="selectCulture('Maracujá')" class="card p-6 flex flex-col items-center active:scale-95 transition-all">
+                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-2">
+                        <i class="fas fa-lemon text-purple-600"></i>
                     </div>
                     <span class="font-bold text-sm">Maracujá</span>
                 </button>
-                <button onclick="selectCulture('Laranja')" class="card p-6 flex flex-col items-center hover:bg-green-50 transition-all border-2 border-transparent active:border-green-600">
-                    <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-3">
-                        <i class="fas fa-circle text-orange-500 text-2xl"></i>
+                <button onclick="selectCulture('Laranja')" class="card p-6 flex flex-col items-center active:scale-95 transition-all">
+                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-2">
+                        <i class="fas fa-circle text-orange-500"></i>
                     </div>
                     <span class="font-bold text-sm">Laranja</span>
                 </button>
             </div>
         </div>
 
-        <!-- Captura de Imagem -->
         <div id="step-2" class="hidden space-y-4">
             <div class="flex items-center justify-between">
-                <h2 class="font-bold text-gray-700 uppercase tracking-widest text-xs">Cultura: <span id="display-culture" class="text-green-700"></span></h2>
+                <h2 class="font-bold text-gray-700 uppercase text-xs">Cultura: <span id="display-culture" class="text-green-700"></span></h2>
                 <button onclick="resetApp()" class="text-xs text-gray-400 font-bold uppercase">Voltar</button>
             </div>
             <div class="card p-2">
-                <div class="relative bg-gray-100 rounded-2xl min-h-[300px] flex flex-col items-center justify-center border-2 border-dashed border-gray-300 overflow-hidden cursor-pointer" onclick="document.getElementById('file-input').click()">
-                    <img id="preview" class="hidden w-full h-auto max-h-[450px] object-contain">
+                <div class="relative bg-gray-100 rounded-2xl min-h-[250px] flex flex-col items-center justify-center border-2 border-dashed border-gray-300 overflow-hidden cursor-pointer" onclick="document.getElementById('file-input').click()">
+                    <img id="preview" class="hidden w-full h-auto max-h-[400px] object-contain">
                     <div id="placeholder" class="text-center p-10">
-                        <i class="fas fa-camera text-5xl text-gray-300 mb-4"></i>
-                        <p class="text-gray-500 font-bold">Toque para Abrir Câmera</p>
-                        <p class="text-[10px] text-gray-400 mt-2">Certifique-se de que a imagem esteja nítida.</p>
+                        <i class="fas fa-camera text-4xl text-gray-300 mb-2"></i>
+                        <p class="text-gray-500 font-bold">Selecionar Foto</p>
                     </div>
                 </div>
             </div>
-            <input type="file" id="file-input" class="hidden" accept="image/*" capture="environment">
-            <button id="btn-analyze" onclick="startAnalysis()" class="hidden w-full bg-green-700 text-white py-5 rounded-2xl font-black text-xl shadow-lg active:scale-95 transition-transform">
-                EXAMINAR COM IA
+            <input type="file" id="file-input" class="hidden" accept="image/*">
+            <button id="btn-analyze" onclick="startAnalysis()" class="hidden w-full bg-green-700 text-white py-4 rounded-2xl font-black shadow-lg">
+                ANALISAR COM IA
             </button>
         </div>
 
-        <!-- Histórico de Diagnósticos -->
-        <div id="history-section" class="hidden space-y-4">
-            <div class="flex items-center justify-between">
-                <h2 class="font-bold text-gray-700 uppercase tracking-widest text-xs">Meus Diagnósticos</h2>
-                <button onclick="toggleHistory()" class="text-xs text-gray-400 font-bold">FECHAR</button>
-            </div>
-            <div id="history-list" class="space-y-3">
-                <!-- Carregado via JS -->
-            </div>
-        </div>
-
-        <!-- Carregando Análise -->
         <div id="loader-area" class="hidden py-20 text-center">
-            <div class="loader mx-auto mb-6"></div>
-            <p class="text-green-800 font-black animate-pulse">AGRO SCAN IDENTIFICANDO...</p>
-            <p class="text-xs text-gray-500 mt-2">Comparando padrões visuais da doença</p>
+            <div class="loader mx-auto mb-4"></div>
+            <p class="text-green-800 font-black animate-pulse">IDENTIFICANDO...</p>
         </div>
 
-        <!-- Resultado Final -->
         <div id="result-area" class="hidden space-y-4">
-            <div class="card overflow-hidden border-t-8 border-green-800">
-                <div class="p-8 laudo-content" id="output-text">
-                    <!-- O Laudo entra aqui -->
-                </div>
-            </div>
-            <button onclick="resetApp()" class="w-full bg-gray-900 text-white py-4 rounded-xl font-bold active:scale-95 transition-transform shadow-md">
-                REALIZAR NOVO EXAME
-            </button>
+            <div class="card p-6 laudo-content" id="output-text"></div>
+            <button onclick="resetApp()" class="w-full bg-gray-900 text-white py-4 rounded-xl font-bold">NOVO EXAME</button>
         </div>
-
     </main>
 
     <script>
-        const apiKey = "AIzaSyBjQPvocuYPI_ZsjmzWq0vaf5jHyhZFkME"; // Injetado pelo Canvas
+        // Use sua chave do Google AI Studio aqui se esta expirar
+        const apiKey = "AIzaSyBjQPvocuYPI_ZsjmzWq0vaf5jHyhZFkME"; 
         let currentCulture = "";
         let base64Image = "";
 
@@ -222,33 +105,10 @@
             document.getElementById('display-culture').innerText = c;
             document.getElementById('step-1').classList.add('hidden');
             document.getElementById('step-2').classList.remove('hidden');
-            document.getElementById('history-section').classList.add('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function toggleHistory() {
-            const h = document.getElementById('history-section');
-            const s1 = document.getElementById('step-1');
-            if (h.classList.contains('hidden')) {
-                h.classList.remove('hidden');
-                s1.classList.add('hidden');
-                loadHistory();
-            } else {
-                h.classList.add('hidden');
-                s1.classList.remove('hidden');
-            }
         }
 
         function resetApp() {
-            document.getElementById('step-2').classList.add('hidden');
-            document.getElementById('result-area').classList.add('hidden');
-            document.getElementById('history-section').classList.add('hidden');
-            document.getElementById('step-1').classList.remove('hidden');
-            document.getElementById('preview').classList.add('hidden');
-            document.getElementById('placeholder').classList.remove('hidden');
-            document.getElementById('btn-analyze').classList.add('hidden');
-            document.getElementById('file-input').value = "";
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            location.reload(); // Recarrega para limpar tudo de forma simples
         }
 
         document.getElementById('file-input').addEventListener('change', function(e) {
@@ -256,8 +116,9 @@
             if (!file) return;
             const reader = new FileReader();
             reader.onload = (ev) => {
-                base64Image = ev.target.result.split(',')[1];
-                document.getElementById('preview').src = ev.target.result;
+                const fullBase64 = ev.target.result;
+                base64Image = fullBase64.split(',')[1];
+                document.getElementById('preview').src = fullBase64;
                 document.getElementById('preview').classList.remove('hidden');
                 document.getElementById('placeholder').classList.add('hidden');
                 document.getElementById('btn-analyze').classList.remove('hidden');
@@ -268,118 +129,52 @@
         async function startAnalysis() {
             const loader = document.getElementById('loader-area');
             const resultArea = document.getElementById('result-area');
-            const btn = document.getElementById('btn-analyze');
+            const step2 = document.getElementById('step-2');
             
             loader.classList.remove('hidden');
-            btn.classList.add('hidden');
-            resultArea.classList.add('hidden');
+            step2.classList.add('hidden');
 
-            const systemPrompt = `Você é o Agro Scan, uma IA de alta precisão em fitopatologia para ${currentCulture}. 
-            Seu objetivo é identificar EXATAMENTE a doença ou praga com base nos sinais visuais (clorose, necrose, halo, pústulas, distribuição).
-            Seja rigoroso: Se a imagem não permitir um diagnóstico claro, avise.
-            Estrutura do laudo:
-            # [NOME DA DOENÇA/PRAGA EM DESTAQUE]
-            ## 🔍 Diagnóstico Clínico
-            - **Causa Provável:** [Nome comum e científico]
-            - **Análise Visual:** [O que a IA viu na imagem para confirmar isso]
-            - **Gravidade:** [Baixa/Média/Alta]
-            ## 🛠️ Plano de Ação
-            - **Imediato:** [O que o produtor deve fazer agora]
-            - **Manejo Químico/Biológico:** [Opções técnicas com aviso de receituário]
-            ## 🛡️ Prevenção
-            - [Como evitar a volta do problema]`;
+            const promptText = `Você é o Agro Scan. Analise esta imagem de uma plantação de ${currentCulture}. 
+            Identifique a doença, causa, gravidade e plano de ação. Responda em Markdown usando # para títulos e ## para subtítulos.`;
 
             try {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-                const resp = await fetch(url, {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{ parts: [{ text: `Analise a imagem de ${currentCulture} e dê o veredito técnico.` }, { inlineData: { mimeType: "image/jpeg", data: base64Image } }] }],
-                        systemInstruction: { parts: [{ text: systemPrompt }] }
+                        contents: [{
+                            parts: [
+                                { text: promptText },
+                                { inlineData: { mimeType: "image/jpeg", data: base64Image } }
+                            ]
+                        }]
                     })
                 });
                 
-                const data = await resp.json();
-                const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-                if (text) {
-                    showResult(text);
-                    saveToCloud(currentCulture, text);
-                }
+                const data = await response.json();
+                const resultText = data.candidates[0].content.parts[0].text;
+                showResult(resultText);
             } catch (err) {
-                alert("Erro ao conectar com a IA. Verifique sua conexão.");
-            } finally {
+                alert("Erro na análise. Verifique a chave da API ou a internet.");
+                console.error(err);
                 loader.classList.add('hidden');
+                step2.classList.remove('hidden');
             }
         }
 
         function showResult(text) {
             const output = document.getElementById('output-text');
-            const html = text
+            // Converte Markdown simples para HTML
+            output.innerHTML = text
                 .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-                .replace(/^## (.*$)/gim, '<h2><i class="fas fa-chevron-right text-xs"></i> $1</h2>')
+                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
                 .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
                 .replace(/\n/g, '<br>');
-            output.innerHTML = html;
-            document.getElementById('step-2').classList.add('hidden');
+            
+            document.getElementById('loader-area').classList.add('hidden');
             document.getElementById('result-area').classList.remove('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        async function saveToCloud(cult, diag) {
-            if (!window.auth.currentUser) return;
-            try {
-                await window.addDoc(window.collection(window.db, 'artifacts', window.appId, 'users', window.auth.currentUser.uid, 'diagnoses'), {
-                    culture: cult,
-                    diagnosis: diag,
-                    createdAt: window.serverTimestamp()
-                });
-            } catch (e) { console.error("Erro ao salvar:", e); }
-        }
-
-        function loadHistory() {
-            if (!window.auth.currentUser) return;
-            const list = document.getElementById('history-list');
-            list.innerHTML = '<div class="text-center py-10 text-gray-400"><i class="fas fa-sync fa-spin"></i> Carregando...</div>';
-
-            const ref = window.collection(window.db, 'artifacts', window.appId, 'users', window.auth.currentUser.uid, 'diagnoses');
-            window.onSnapshot(ref, (snap) => {
-                list.innerHTML = "";
-                if (snap.empty) {
-                    list.innerHTML = '<div class="card p-10 text-center text-gray-400">Nenhum diagnóstico salvo.</div>';
-                    return;
-                }
-                const docs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                // Ordenar por data manualmente
-                docs.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-
-                docs.forEach(d => {
-                    const item = document.createElement('div');
-                    item.className = "card p-4 flex justify-between items-center cursor-pointer hover:bg-green-50 active:scale-[0.98] transition-all";
-                    const title = d.diagnosis.split('\n')[0].replace('# ', '');
-                    const date = d.createdAt ? d.createdAt.toDate().toLocaleDateString('pt-BR') : "...";
-                    
-                    item.innerHTML = `
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="text-[9px] font-black bg-green-100 text-green-700 px-2 py-0.5 rounded-full uppercase">${d.culture}</span>
-                                <span class="text-[9px] text-gray-400 font-bold uppercase">${date}</span>
-                            </div>
-                            <h4 class="font-bold text-gray-800 truncate pr-4">${title}</h4>
-                        </div>
-                        <i class="fas fa-chevron-right text-gray-300"></i>
-                    `;
-                    item.onclick = () => {
-                        showResult(d.diagnosis);
-                        document.getElementById('history-section').classList.add('hidden');
-                    };
-                    list.appendChild(item);
-                });
-            });
         }
     </script>
 </body>
 </html>
 
-```
