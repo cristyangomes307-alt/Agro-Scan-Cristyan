@@ -105,7 +105,6 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Estilos do Laudo */
         .laudo-content h1 { font-size: 1.8rem; font-weight: 800; color: #064e3b; margin-top: 0.5rem; margin-bottom: 1rem; line-height: 1.1; letter-spacing: -0.02em; }
         .laudo-content h2 { font-size: 1.1rem; font-weight: 700; color: #10b981; margin-top: 1.5rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; }
         .laudo-content p { color: #475569; line-height: 1.6; font-size: 0.95rem; margin-bottom: 0.8rem; }
@@ -143,7 +142,7 @@
 
     <main class="max-w-4xl mx-auto p-5 -mt-12 relative z-10">
         
-        <!-- Dashboard Menu -->
+        <!-- Menu Principal -->
         <div id="step-1" class="space-y-8">
             <div class="flex items-center justify-between px-2">
                 <h2 class="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest">Painel de Culturas</h2>
@@ -183,7 +182,7 @@
             </div>
         </div>
 
-        <!-- Etapa 2: Scanner -->
+        <!-- Seletor de Foto (Ajustado para Galeria) -->
         <div id="step-2" class="hidden mt-14 space-y-6">
             <div class="flex items-center justify-between bg-white/80 backdrop-blur-md p-3 rounded-2xl border border-white shadow-sm">
                 <div class="flex items-center gap-3">
@@ -198,36 +197,37 @@
             <div class="bg-white rounded-3xl p-2 border-2 border-dashed border-emerald-100 relative overflow-hidden shadow-inner" onclick="document.getElementById('file-input').click()">
                 <div id="placeholder" class="py-24 text-center">
                     <div class="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-100 shadow-sm">
-                        <i class="fas fa-camera text-4xl text-emerald-400"></i>
+                        <i class="fas fa-images text-4xl text-emerald-400"></i>
                     </div>
-                    <p class="font-extrabold text-slate-500 text-sm">Capturar Amostra</p>
-                    <p class="text-slate-300 text-[10px] uppercase font-bold mt-1 tracking-widest">Toque para Fotografar</p>
+                    <p class="font-extrabold text-slate-500 text-sm">Escolher da Galeria</p>
+                    <p class="text-slate-300 text-[10px] uppercase font-bold mt-1 tracking-widest">Toque para selecionar imagem</p>
                 </div>
                 <img id="preview" class="hidden w-full h-auto max-h-[500px] object-contain rounded-2xl">
             </div>
             
-            <input type="file" id="file-input" class="hidden" accept="image/*" capture="environment">
+            <!-- Removido o atributo capture para abrir as fotos do dispositivo -->
+            <input type="file" id="file-input" class="hidden" accept="image/*">
             
             <button id="btn-analyze" onclick="startAnalysis()" class="hidden w-full bg-emerald-600 text-white py-6 rounded-3xl font-black text-xl shadow-2xl shadow-emerald-200 active:scale-95 transition-all">
                 GERAR DIAGNÓSTICO
             </button>
         </div>
 
-        <!-- Histórico -->
+        <!-- Arquivo de Laudos -->
         <div id="history-section" class="hidden space-y-4 pt-14">
             <h3 class="font-black text-slate-800 px-2 uppercase text-xs tracking-widest">Arquivo de Campo</h3>
             <div id="history-list" class="space-y-3"></div>
             <button onclick="toggleHistory()" class="w-full py-4 text-slate-400 font-bold text-xs uppercase tracking-widest">Voltar ao Painel</button>
         </div>
 
-        <!-- Loader -->
+        <!-- Área de Processamento -->
         <div id="loader-area" class="hidden py-32 text-center">
             <div class="loader mx-auto mb-8"></div>
-            <h2 class="text-emerald-950 font-black text-xl italic tracking-tighter">PROCESSANDO AMOSTRA...</h2>
-            <p class="text-slate-400 text-xs mt-2 uppercase font-bold tracking-[0.2em]">Identificando Agente Causador</p>
+            <h2 class="text-emerald-950 font-black text-xl italic tracking-tighter">ANALISANDO AMOSTRA...</h2>
+            <p class="text-slate-400 text-xs mt-2 uppercase font-bold tracking-[0.2em]">Processamento via Gemini AI</p>
         </div>
 
-        <!-- Resultado -->
+        <!-- Área de Resultado -->
         <div id="result-area" class="hidden space-y-6 pt-14">
             <div class="bg-white rounded-[2.5rem] p-8 laudo-content shadow-2xl relative overflow-hidden" id="output-text"></div>
             <div class="flex gap-3">
@@ -323,26 +323,26 @@
             loader.classList.remove('hidden');
             step2.classList.add('hidden');
 
-            const systemPrompt = `Aja como o 'Agro Scan Pro'. Sua prioridade absoluta é o diagnóstico.
+            const systemPrompt = `Aja como o 'Agro Scan Pro'. Sua prioridade absoluta é o diagnóstico clínico.
             
             REGRAS DE RESPOSTA:
-            1. O NOME DA DOENÇA deve ser o TÍTULO PRINCIPAL (#).
-            2. Forneça uma explicação curta da etiologia.
-            3. Explique a causa raiz (ambiente, clima, manejo).
+            1. O NOME DA DOENÇA deve ser obrigatoriamente o TÍTULO PRINCIPAL (#).
+            2. Forneça uma explicação detalhada da etiologia.
+            3. Explique a causa raiz baseada no ambiente e manejos comuns.
 
             FORMATO DO LAUDO (MARKDOWN):
             # [NOME DA DOENÇA]
             
             ## 🧬 Etiologia e Causa Raiz
             - **Agente:** [Nome científico]
-            - **Causa Ambiental:** [O que no clima/manejo causou isso?]
+            - **Causa Ambiental:** [O que provocou o surto?]
             
             ## 🔍 Evidências Visuais
-            - [Descrição detalhada da lesão]
+            - [Sintomas detectados na imagem]
             
             ## 🛠️ Protocolo de Manejo
-            - **Tratamento:** [Ação imediata]
-            - **Prevenção:** [Manejo futuro]
+            - **Tratamento:** [Intervenção imediata]
+            - **Prevenção:** [Sugestão de manejo preventivo]
             
             ## 📊 Confiança: [X%]`;
 
@@ -355,7 +355,7 @@
                         contents: [{ 
                             role: "user",
                             parts: [
-                                { text: `Inicie análise de ${currentCulture}. Coloque o nome da doença em primeiro lugar.` }, 
+                                { text: `Analise a cultura ${currentCulture}. Coloque o nome da doença em primeiro lugar no laudo.` }, 
                                 { inlineData: { mimeType: "image/jpeg", data: base64Image } }
                             ] 
                         }],
@@ -372,7 +372,7 @@
                     saveToCloud(currentCulture, text);
                 } else { throw new Error(); }
             } catch (err) {
-                alert("Erro no servidor.");
+                alert("Falha na comunicação com a IA.");
                 resetApp();
             } finally {
                 loader.classList.add('hidden');
@@ -410,7 +410,7 @@
             window.onSnapshot(ref, (snap) => {
                 list.innerHTML = "";
                 if (snap.empty) {
-                    list.innerHTML = '<div class="bg-white p-12 rounded-3xl text-center text-slate-400 text-xs italic">Nenhum registro.</div>';
+                    list.innerHTML = '<div class="bg-white p-12 rounded-3xl text-center text-slate-400 text-xs italic">Sem registros no momento.</div>';
                     return;
                 }
                 snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
@@ -436,3 +436,4 @@
 </html>
 
 ```
+
