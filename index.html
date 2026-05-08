@@ -13,19 +13,21 @@
         .card { background: white; border-radius: 1.5rem; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #2d6a4f; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .laudo-content h1 { color: #1b4332; font-weight: 900; font-size: 1.4rem; margin-bottom: 1rem; border-bottom: 2px solid #d8f3dc; }
-        .laudo-content h2 { color: #2d6a4f; font-weight: 700; font-size: 1.1rem; margin-top: 1rem; }
+        .laudo-content h1 { color: #1b4332; font-weight: 900; font-size: 1.4rem; margin-bottom: 1rem; border-bottom: 2px solid #d8f3dc; padding-bottom: 0.5rem; }
+        .laudo-content h2 { color: #2d6a4f; font-weight: 700; font-size: 1.1rem; margin-top: 1rem; margin-bottom: 0.5rem; }
+        .laudo-content p { margin-bottom: 0.75rem; color: #374151; line-height: 1.6; }
     </style>
 </head>
 <body class="pb-10">
 
     <header class="gradient-header text-white p-10 shadow-xl text-center">
-        <h1 class="text-3xl font-black italic italic tracking-tighter">AGRO SCAN</h1>
-        <p class="text-green-200/80 text-sm">IA Fitopatológica</p>
+        <h1 class="text-3xl font-black italic tracking-tighter">AGRO SCAN</h1>
+        <p class="text-green-200/80 text-sm">IA Fitopatológica Especializada</p>
     </header>
 
     <main class="max-w-4xl mx-auto p-4 -mt-8">
         <div id="step-1" class="space-y-4">
+            <h2 class="font-black text-gray-700 uppercase tracking-wide px-1 text-sm text-center">Selecione a Cultura para Análise</h2>
             <div class="grid grid-cols-2 gap-4">
                 <button onclick="selectCulture('Soja')" class="card p-6 flex flex-col items-center active:scale-95 transition-all">
                     <i class="fas fa-seedling text-green-700 text-2xl mb-2"></i>
@@ -48,37 +50,55 @@
 
         <div id="step-2" class="hidden space-y-4">
             <div class="card p-4 text-center">
-                <div class="border-2 border-dashed border-gray-300 rounded-xl p-10 cursor-pointer" onclick="document.getElementById('file-input').click()">
-                    <img id="preview" class="hidden w-full rounded-lg mb-4">
-                    <i id="cam-icon" class="fas fa-camera text-4xl text-gray-300"></i>
-                    <p id="cam-text" class="text-gray-400 font-bold mt-2">Toque para selecionar foto</p>
+                <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 cursor-pointer bg-gray-50" onclick="document.getElementById('file-input').click()">
+                    <img id="preview" class="hidden w-full rounded-lg mb-4 shadow-sm">
+                    <div id="upload-msg">
+                        <i class="fas fa-camera text-5xl text-gray-300 mb-2"></i>
+                        <p class="text-gray-500 font-bold">Toque para selecionar a foto</p>
+                        <p class="text-[10px] text-gray-400 mt-1 uppercase">Cultura: <span id="display-culture" class="text-green-700"></span></p>
+                    </div>
                 </div>
                 <input type="file" id="file-input" class="hidden" accept="image/*">
-                <button id="btn-analyze" onclick="startAnalysis()" class="hidden w-full bg-green-700 text-white py-4 rounded-xl font-black mt-4">ANALISAR AGORA</button>
-                <button onclick="location.reload()" class="text-xs text-gray-400 mt-4 block mx-auto uppercase">Voltar</button>
+                
+                <button id="btn-analyze" onclick="startAnalysis()" class="hidden w-full bg-green-700 text-white py-4 rounded-xl font-black mt-4 shadow-lg active:scale-95 transition-transform">
+                    EXECUTAR DIAGNÓSTICO
+                </button>
+                
+                <button onclick="location.reload()" class="text-xs text-gray-400 mt-6 block mx-auto font-bold uppercase tracking-widest">
+                    <i class="fas fa-arrow-left mr-1"></i> Voltar ao início
+                </button>
             </div>
         </div>
 
         <div id="loader-area" class="hidden py-20 text-center">
-            <div class="loader mx-auto mb-4"></div>
-            <p class="text-green-800 font-black animate-pulse">PROCESSANDO DIAGNÓSTICO...</p>
+            <div class="loader mx-auto mb-6"></div>
+            <p class="text-green-800 font-black animate-pulse uppercase tracking-widest">Agro Scan identificando...</p>
+            <p class="text-[10px] text-gray-400 mt-2">Isso pode levar alguns segundos conforme sua conexão</p>
         </div>
 
         <div id="result-area" class="hidden space-y-4">
-            <div class="card p-6 laudo-content" id="output-text"></div>
-            <button onclick="location.reload()" class="w-full bg-gray-900 text-white py-4 rounded-xl font-bold">NOVO EXAME</button>
+            <div class="card overflow-hidden border-t-8 border-green-800">
+                <div class="p-6 laudo-content" id="output-text">
+                    </div>
+            </div>
+            <button onclick="location.reload()" class="w-full bg-gray-900 text-white py-4 rounded-xl font-bold shadow-md active:scale-95 transition-transform uppercase">
+                Realizar Novo Exame
+            </button>
         </div>
     </main>
 
     <script>
+        // Chave de API fornecida por você
         const apiKey = "AIzaSyB3z48pV_WD2aFzq3fU5ND6sZw5UsRsfNw"; 
         let currentCulture = "";
         let base64Image = "";
 
         function selectCulture(c) {
             currentCulture = c;
+            document.getElementById('display-culture').innerText = c;
             document.getElementById('step-1').classList.add('hidden');
             document.getElementById('step-2').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         document.getElementById('file-input').addEventListener('change', function(e) {
@@ -87,32 +107,38 @@
             const reader = new FileReader();
             reader.onload = (ev) => {
                 const res = ev.target.result;
+                // Remove o cabeçalho data:image/...;base64,
                 base64Image = res.split(',')[1];
+                
                 document.getElementById('preview').src = res;
                 document.getElementById('preview').classList.remove('hidden');
-                document.getElementById('cam-icon').classList.add('hidden');
-                document.getElementById('cam-text').classList.add('hidden');
+                document.getElementById('upload-msg').classList.add('hidden');
                 document.getElementById('btn-analyze').classList.remove('hidden');
             };
             reader.readAsDataURL(file);
         });
 
         async function startAnalysis() {
-            document.getElementById('step-2').classList.add('hidden');
-            document.getElementById('loader-area').classList.remove('hidden');
+            const step2 = document.getElementById('step-2');
+            const loader = document.getElementById('loader-area');
+            
+            step2.classList.add('hidden');
+            loader.classList.remove('hidden');
 
             const payload = {
                 contents: [{
                     parts: [
-                        { text: `Analise esta planta de ${currentCulture}. Dê o nome da doença, diagnóstico, ação e prevenção.` },
+                        { text: `Você é o Agro Scan. Analise esta imagem de ${currentCulture} e forneça um laudo fitossanitário. Formate a resposta com títulos usando # e subtítulos usando ##. Inclua: Nome da Doença, Diagnóstico Clínico, Ações de Manejo e Prevenção.` },
                         { inlineData: { mimeType: "image/jpeg", data: base64Image } }
                     ]
                 }]
             };
 
             try {
-                // URL atualizada para v1 estável
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                // Endpoint v1beta é o correto para Gemini 1.5 Flash com Multimodal (Imagens)
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+                
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -124,17 +150,23 @@
                     throw new Error(data.error.message);
                 }
 
-                const textoIA = data.candidates[0].content.parts[0].text;
-                exibirResultado(textoIA);
+                if (data.candidates && data.candidates.length > 0) {
+                    const textoIA = data.candidates[0].content.parts[0].text;
+                    exibirResultado(textoIA);
+                } else {
+                    throw new Error("A IA não conseguiu processar a imagem. Tente uma foto mais nítida.");
+                }
 
             } catch (err) {
-                alert("Erro: " + err.message);
-                location.reload();
+                alert("Ocorreu um erro: " + err.message);
+                loader.classList.add('hidden');
+                step2.classList.remove('hidden');
             }
         }
 
         function exibirResultado(text) {
             const out = document.getElementById('output-text');
+            // Conversão simples de Markdown para HTML para o Laudo
             out.innerHTML = text
                 .replace(/^# (.*$)/gim, '<h1>$1</h1>')
                 .replace(/^## (.*$)/gim, '<h2>$1</h2>')
@@ -143,6 +175,7 @@
             
             document.getElementById('loader-area').classList.add('hidden');
             document.getElementById('result-area').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     </script>
 </body>
